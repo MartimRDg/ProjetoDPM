@@ -113,7 +113,7 @@ footer {
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin: 20px auto;
-    width: 100%;
+    max-width: 1500px;
 }
 
 .updates h1 {
@@ -130,7 +130,7 @@ footer {
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     margin: 20px auto;
-    width: 90%;
+    max-width: 1500px;
 }
 
 .update-item h1 {
