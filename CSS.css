@@ -69,6 +69,10 @@ nav ul li {
     transition: background-color 0.3s ease;
 }
 
+nav ul li:hover {
+    transform: scale(1.05);
+}
+
 nav ul li a {
     color: #ffffff;
     text-decoration:none;
@@ -186,6 +190,10 @@ footer {
     transition: background-color 0.3s ease;
 }
 
+.updates nav ul li:hover {
+    transform: scale(1.05);
+}
+
 .updates nav ul li a {
     color: #ffffff;
     text-decoration:none;
@@ -218,6 +226,10 @@ footer {
 .update-item nav ul li a {
     color: #ffffff;
     text-decoration:none;
+}
+
+.update-item nav ul li:hover {
+    transform: scale(1.05);
 }
 
 /* Gallery */
