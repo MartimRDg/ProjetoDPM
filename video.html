@@ -6,6 +6,42 @@
     <title>Markiplier's Fan Service</title>
     <link rel="stylesheet" href="CSS.css">
 </head>
+<script>
+    const apiKey = 'SUA_API_KEY';
+const channelId = 'UC7_YxT-KID8kRbqZo7MyscQ';
+
+async function carregarVideos() {
+  // Passo 1: pegar uploads playlist ID
+  const channelRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${apiKey}`);
+  const channelData = await channelRes.json();
+  const uploadsPlaylistId = channelData.items[0].contentDetails.relatedPlaylists.uploads;
+
+  // Passo 2: pegar vídeos dessa playlist
+  const videoRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=6&playlistId=${uploadsPlaylistId}&key=${apiKey}`);
+  const videoData = await videoRes.json();
+
+  const container = document.querySelector(".gallery .image-container");
+  container.innerHTML = "";
+
+  videoData.items.forEach(item => {
+    const videoId = item.snippet.resourceId.videoId;
+    const titulo = item.snippet.title;
+    const thumbnail = item.snippet.thumbnails.high.url;
+
+    const videoHTML = `
+      <div class="video-item">
+        <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank">
+          <img src="${thumbnail}" alt="${titulo}" class="gallery-image">
+        </a>
+        <p class="video-title">${titulo}</p>
+      </div>
+    `;
+    container.innerHTML += videoHTML;
+  });
+}
+
+carregarVideos();
+  </script>  
 <body>
     <header>
         <h1>Markiplier's Fanbase</h1>
