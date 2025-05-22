@@ -244,11 +244,10 @@ footer {
     transform: scale(1.05);
 }
 
-
 /* Gallery */
 
 .gallery {
-    padding: 1.5em 5%;
+    padding: 1.5em 5% 0 0%;
     display: flex;
     flex-direction: column;
     align-items: center;

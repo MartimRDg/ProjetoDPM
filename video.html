@@ -6,40 +6,169 @@
     <link rel="icon" href="logo.jpg" type="image/x-icon">
     <title>Markiplier's Fan Service</title>
     <link rel="stylesheet" href="CSS.css">
+    <style>
+        .video-player {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .video-container {
+            width: 80%;
+            max-width: 1200px;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+        .video-iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+        }
+        @media (max-width: 768px) {
+            .video-iframe {
+                height: 300px;
+            }
+            .video-container {
+                width: 95%;
+            }
+        }
+    </style>
 </head>
 <script>
-async function carregarVideosViaRSS() {
+async function carregarVideosRecentes() {
   const rssUrl = "https://www.youtube.com/feeds/videos.xml?channel_id=UC7_YxT-KID8kRbqZo7MyscQ";
   const proxy = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(rssUrl);
-
   try {
     const response = await fetch(proxy);
     const data = await response.json();
 
-    const container = document.querySelector(".gallery .image-container");
-    container.innerHTML = "";
-
-    data.items.slice(0, 6).forEach(item => {
-      const videoHTML = `
-        <div class="video-item">
-          <a href="${item.link}" target="_blank">
-            <img src="${item.thumbnail}" alt="${item.title}" class="gallery-image">
-          </a>
-          <p class="video-title">${item.title}</p>
-        </div>
-      `;
-      container.innerHTML += videoHTML;
+    const recentesContainer = document.querySelector("#recentes .image-container");
+    recentesContainer.innerHTML = "";
+    
+    // Get only the 6 most recent videos
+    const videos = data.items.slice(0, 6);
+    
+    videos.forEach(item => {
+      recentesContainer.innerHTML += criarHTMLVideo(item);
     });
+
   } catch (err) {
     console.error("Erro ao carregar via RSS:", err.message);
+    // Fallback to static recent videos if RSS fails
+    document.querySelector("#recentes .image-container").innerHTML = `
+      <div class="video-item">
+        <div class="video-thumbnail" data-video-id="DltU7CdBtjU">
+          <img src="https://img.youtube.com/vi/DltU7CdBtjU/0.jpg" alt="Markiplier Video 1" class="gallery-image">
+          <div class="play-button">▶</div>
+        </div>
+        <p class="video-title">FULL GAME RELEASE | White Knuckle - Part 4</p>
+      </div>
+      <div class="video-item">
+        <div class="video-thumbnail" data-video-id="Z1uVfyVu5Nk">
+          <img src="https://img.youtube.com/vi/Z1uVfyVu5Nk/0.jpg" alt="Markiplier Video 2" class="gallery-image">
+          <div class="play-button">▶</div>
+        </div>
+        <p class="video-title">TOO SMART FOR MY OWN GOOD | Blue Prince</p>
+      </div>
+      <div class="video-item">
+        <div class="video-thumbnail" data-video-id="z9o-wdlmz4s">
+          <img src="https://img.youtube.com/vi/z9o-wdlmz4s/0.jpg" alt="Markiplier Video 3" class="gallery-image">
+          <div class="play-button">▶</div>
+        </div>
+        <p class="video-title">ALMOST... ALMOST... | White Knuckle - Part 3</p>
+      </div>
+      <div class="video-item">
+        <div class="video-thumbnail" data-video-id="HGPOQ4UiQ4w">
+          <img src="https://img.youtube.com/vi/HGPOQ4UiQ4w/0.jpg" alt="Markiplier Video 4" class="gallery-image">
+          <div class="play-button">▶</div>
+        </div>
+        <p class="video-title">3 SCARY GAMES #108</p>
+      </div>
+      <div class="video-item">
+        <div class="video-thumbnail" data-video-id="uPah60Cgyu0">
+          <img src="https://img.youtube.com/vi/uPah60Cgyu0/0.jpg" alt="Markiplier Video 5" class="gallery-image">
+          <div class="play-button">▶</div>
+        </div>
+        <p class="video-title">HOPELESSLY ADDICTED | White Knuckle - Part 2</p>
+      </div>
+      <div class="video-item">
+        <div class="video-thumbnail" data-video-id="Y1PwWSRAa8w">
+          <img src="https://img.youtube.com/vi/Y1PwWSRAa8w/0.jpg" alt="Markiplier Video 6" class="gallery-image">
+          <div class="play-button">▶</div>
+        </div>
+        <p class="video-title">ONE LAST STORY | The Headliners - Part 3</p>
+      </div>
+    `;
   }
 }
 
-carregarVideosViaRSS();
+function criarHTMLVideo(item) {
+  const videoId = extractVideoId(item.link);
+  return `
+    <div class="video-item">
+      <div class="video-thumbnail" onclick="playVideo('${videoId}')">
+        <img src="${item.thumbnail}" alt="${item.title}" class="gallery-image">
+        <div class="play-button">▶</div>
+      </div>
+      <p class="video-title">${item.title}</p>
+    </div>
+  `;
+}
+
+function extractVideoId(url) {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
+
+function playVideo(videoId) {
+  const player = document.getElementById('video-player');
+  const iframe = document.getElementById('video-iframe');
+  iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+  player.style.display = 'flex';
+}
+
+function closeVideo() {
+  const player = document.getElementById('video-player');
+  const iframe = document.getElementById('video-iframe');
+  iframe.src = '';
+  player.style.display = 'none';
+}
+
+// Initialize the page
+window.onload = function() {
+  // Only load recent videos dynamically
+  carregarVideosRecentes();
+  
+  // Add click handlers for all video thumbnails
+  document.querySelectorAll('.video-thumbnail').forEach(thumb => {
+    const videoId = thumb.getAttribute('data-video-id');
+    thumb.addEventListener('click', () => playVideo(videoId));
+  });
+};
 </script>
 
-
 <body>
+    <div id="video-player" class="video-player">
+        <div class="video-container">
+            <span class="close-btn" onclick="closeVideo()">×</span>
+            <iframe id="video-iframe" class="video-iframe" allowfullscreen></iframe>
+        </div>
+    </div>
+    
     <header>
         <img src="banner.jpg" alt="Markiplier Logo" class="logo">
         <h1>Markiplier's Fanbase</h1>
@@ -53,143 +182,114 @@ carregarVideosViaRSS();
         </nav>
     </header>    
     <main>
-        <section class="gallery">
+        <section id="recentes" class="gallery">
             <h2>Vídeos Recentes</h2>
             <div class="image-container">
-                <!-- Recente Video 1 -->
-                <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=DltU7CdBtjU" target="_blank">
-                        <img src="https://img.youtube.com/vi/DltU7CdBtjU/0.jpg" alt="Markiplier Video 1" class="gallery-image">
-                    </a>
-                    <p class="video-title">FULL GAME RELEASE | White Knuckle - Part 4</p>
-                </div>
-                <!-- Recente Video 2 -->
-                <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=Z1uVfyVu5Nk" target="_blank">
-                        <img src="https://img.youtube.com/vi/Z1uVfyVu5Nk/0.jpg" alt="Markiplier Video 2" class="gallery-image">
-                    </a>
-                    <p class="video-title">TOO SMART FOR MY OWN GOOD | Blue Prince</p>
-                </div>
-                <!-- Recente Video 3 -->
-                <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=z9o-wdlmz4s&t=99s" target="_blank">
-                        <img src="https://img.youtube.com/vi/z9o-wdlmz4s/0.jpg" alt="Markiplier Video 3" class="gallery-image">
-                    </a>
-                    <p class="video-title">ALMOST... ALMOST... | White Knuckle - Part 3</p>
-                </div>
-                <!-- Recente Video 4 -->
-                <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=HGPOQ4UiQ4w" target="_blank">
-                        <img src="https://img.youtube.com/vi/HGPOQ4UiQ4w/0.jpg" alt="Markiplier Video 4" class="gallery-image">
-                    </a>
-                    <p class="video-title">3 SCARY GAMES #108</p>
-                </div>
-                 <!-- Recente Video 5 -->
-                 <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=uPah60Cgyu0&t=661s" target="_blank">
-                        <img src="https://img.youtube.com/vi/uPah60Cgyu0/0.jpg" alt="Markiplier Video 5" class="gallery-image">
-                    </a>
-                    <p class="video-title">HOPELESSLY ADDICTED | White Knuckle - Part 2</p>
-                </div>
-                 <!-- Recente Video 6 -->
-                 <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=Y1PwWSRAa8w" target="_blank">
-                        <img src="https://img.youtube.com/vi/Y1PwWSRAa8w/0.jpg" alt="Markiplier Video 6" class="gallery-image">
-                    </a>
-                    <p class="video-title">ONE LAST STORY | The Headliners - Part 3</p>
-                </div>
+                <!-- Content will be loaded dynamically -->
             </div>
         </section>      
-        <section class="gallery">
+        <section id="populares" class="gallery">
             <h2>Vídeos Populares</h2>
             <div class="image-container">
                 <!-- Popular Video 1 -->
                 <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=ndsaoMFz9J4" target="_blank">
+                    <div class="video-thumbnail" data-video-id="ndsaoMFz9J4">
                         <img src="https://img.youtube.com/vi/ndsaoMFz9J4/0.jpg" alt="Markiplier Video 1" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">MEOW</p>
                 </div>
                 <!-- Popular Video 2 -->
                 <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=MujRLvZ61jE" target="_blank">
+                    <div class="video-thumbnail" data-video-id="MujRLvZ61jE">
                         <img src="https://img.youtube.com/vi/MujRLvZ61jE/0.jpg" alt="Markiplier Video 2" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">WOOF</p>
                 </div>
                 <!-- Popular Video 3 -->
                 <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=iOztnsBPrAA&t=221s" target="_blank">
+                    <div class="video-thumbnail" data-video-id="iOztnsBPrAA">
                         <img src="https://img.youtube.com/vi/iOztnsBPrAA/0.jpg" alt="Markiplier Video 3" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">WARNING: SCARIEST GAME IN YEARS | Five Nights at Freddy's - Part 1</p>
                 </div>
                 <!-- Popular Video 4 -->
                 <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=I4Q3YDezqcM" target="_blank">
+                    <div class="video-thumbnail" data-video-id="I4Q3YDezqcM">
                         <img src="https://img.youtube.com/vi/I4Q3YDezqcM/0.jpg" alt="Markiplier Video 4" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">MOO</p>
                 </div>
                  <!-- Popular Video 5 -->
                  <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=Zz8MCVJb0_k" target="_blank">
+                    <div class="video-thumbnail" data-video-id="Zz8MCVJb0_k">
                         <img src="https://img.youtube.com/vi/Zz8MCVJb0_k/0.jpg" alt="Markiplier Video 5" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">Five Nights at Freddy's ANIMATED</p>
                 </div>
                  <!-- Popular Video 6 -->
                  <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=60wLvPWXCCc" target="_blank">
+                    <div class="video-thumbnail" data-video-id="60wLvPWXCCc">
                         <img src="https://img.youtube.com/vi/60wLvPWXCCc/0.jpg" alt="Markiplier Video 6" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">SCARIEST GAME EVER MADE | Five Nights at Freddy's 2 - Part 1</p>
                 </div>
             </div>
         </section>  
-        <section class="gallery">
+        <section id="antigos" class="gallery">
             <h2>Vídeos Antigos</h2>
             <div class="image-container">
                 <!-- Antigo Video 1 -->
                 <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=tHPu7Ihz0uc" target="_blank">
+                    <div class="video-thumbnail" data-video-id="tHPu7Ihz0uc">
                         <img src="https://img.youtube.com/vi/tHPu7Ihz0uc/0.jpg" alt="Markiplier Video 1" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">Amnesia Reaction Compilation</p>
                 </div>
                 <!-- Antigo Video 2 -->
                 <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=76B0DSst2ns" target="_blank">
+                    <div class="video-thumbnail" data-video-id="76B0DSst2ns">
                         <img src="https://img.youtube.com/vi/76B0DSst2ns/0.jpg" alt="Markiplier Video 2" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">Penumbra Reaction Compilation</p>
                 </div>
                 <!-- Antigo Video 3 -->
                 <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=7p_SxHkjSmM" target="_blank">
+                    <div class="video-thumbnail" data-video-id="7p_SxHkjSmM">
                         <img src="https://img.youtube.com/vi/7p_SxHkjSmM/0.jpg" alt="Markiplier Video 3" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">Nightmare House Reaction</p>
                 </div>
                 <!-- Antigo Video 4 -->
                 <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=PBTpAYLktAk" target="_blank">
+                    <div class="video-thumbnail" data-video-id="PBTpAYLktAk">
                         <img src="https://img.youtube.com/vi/PBTpAYLktAk/0.jpg" alt="Markiplier Video 4" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">Amnesia Custom Story Reaction</p>
                 </div>
                  <!-- Antigo Video 5 -->
                  <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=fZAuNRIuMfc" target="_blank">
+                    <div class="video-thumbnail" data-video-id="fZAuNRIuMfc">
                         <img src="https://img.youtube.com/vi/fZAuNRIuMfc/0.jpg" alt="Markiplier Video 5" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">Cry of Fear Reaction Compilation #1</p>
                 </div>
                  <!-- Antigo Video 6 -->
                  <div class="video-item">
-                    <a href="https://www.youtube.com/watch?v=fVK0sOgOFPQ" target="_blank">
+                    <div class="video-thumbnail" data-video-id="fVK0sOgOFPQ">
                         <img src="https://img.youtube.com/vi/fVK0sOgOFPQ/0.jpg" alt="Markiplier Video 6" class="gallery-image">
-                    </a>
+                        <div class="play-button">▶</div>
+                    </div>
                     <p class="video-title">Cry of Fear Reaction Compilation #2</p>
                 </div>
             </div>
