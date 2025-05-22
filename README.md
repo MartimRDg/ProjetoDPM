@@ -12,6 +12,6 @@ Aviso! Isto é um projeto fanmade e não está afiliado com o Markiplier diretam
 
 Página: https://martimrdg.github.io/ProjetoDPM/index.html
 
-![Markiplier Banner](https://upload.wikimedia.org/wikipedia/commons/5/5e/Markiplier_2018.png)
+![Markiplier Banner](banner.jpg)
 
 ![QRCode](QRCode.png)
