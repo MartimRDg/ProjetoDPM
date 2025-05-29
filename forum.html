@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="logo.jpg" type="image/x-icon" />
+    <title>Markiplier's Fan Service</title>
+    <link rel="stylesheet" href="CSS.css" />
+</head>
+<body>
+    <header>
+        <img src="banner.jpg" alt="Markiplier Logo" class="logo" />
+        <h1>Markiplier's Fanbase</h1>
+        <h2>Aviso! Isto é um projeto fanmade e não está afiliado com o Markiplier diretamente.</h2>
+        <nav>
+            <ul>
+                <li><a href="https://www.youtube.com/@markiplier" target="_blank" class="youtube-link">Markiplier's YouTube Channel</a></li>
+                <li><a href="index.html">Página Principal</a></li>
+                <li><a href="video.html">Vídeos do Markiplier</a></li>
+                <li><a href="forum.html">Forum</a></li>
+            </ul>
+        </nav>
+    </header>
+<main>
+    <section id="registerSection">
+        <h2>Registrar</h2>
+        <input type="text" id="regUsername" placeholder="Nome de usuário" />
+        <input type="password" id="regPassword" placeholder="Senha" />
+        <button id="registerBtn">Registrar</button>
+        <p id="registerMessage" style="color:red;"></p>
+    </section>
+
+    <section id="loginSection" style="margin-top: 30px;">
+        <h2>Login</h2>
+        <input type="text" id="loginUsername" placeholder="Nome de usuário" />
+        <input type="password" id="loginPassword" placeholder="Senha" />
+        <button id="loginBtn">Entrar</button>
+        <p id="loginMessage" style="color:red;"></p>
+    </section>
+
+    <section id="forumSection" style="display:none; margin-top: 30px;">
+        <div>
+            <button id="logoutBtn" style="float:right; margin-bottom: 10px;">Logout</button>
+            <h3>Olá, <span id="userGreeting"></span>!</h3>
+        </div>
+
+        <div class="create-forum">
+            <h2>Criar Discussão</h2>
+            <input type="text" id="titleInput" placeholder="Título" />
+            <textarea id="messageInput" placeholder="Mensagem"></textarea>
+            <button id="postBtn">Postar</button>
+        </div>
+
+        <div class="forum-list">
+            <h2>Discussões</h2>
+            <div id="messagesContainer"></div>
+        </div>
+    </section>
+</main>
+    <footer>
+        <p>&copy; 2025 Markiplier Fanbase. All rights reserved.</p>
+        <p>Criado por: Martim Diogo</p>
+    </footer>
+
+    <script src="forum.js"></script>
+</body>
+</html>
