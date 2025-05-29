@@ -1,221 +1,276 @@
-// forum.js completo
+// forum.js
 
-function registerUser(username, password) {
-  let users = JSON.parse(localStorage.getItem('users')) || {};
-  if (users[username]) return false;
-  users[username] = { password };
-  localStorage.setItem('users', JSON.stringify(users));
-  return true;
+// Estado do usuário logado
+let currentUser = null;
+
+// Carregar dados do localStorage
+function loadData(key) {
+  const data = localStorage.getItem(key);
+  return data ? JSON.parse(data) : null;
 }
 
-function authenticateUser(username, password) {
-  let users = JSON.parse(localStorage.getItem('users')) || {};
-  if (users[username] && users[username].password === password) {
-    localStorage.setItem('loggedUser', username);
-    return true;
+// Salvar dados no localStorage
+function saveData(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+// Usuários: { username: { username, password } }
+let users = loadData('users') || {};
+
+// Discussões: [{ id, author, title, message, comments: [{author, message}] }]
+let discussions = loadData('discussions') || [];
+
+// Elementos DOM
+const loginSection = document.getElementById('loginSection');
+const registerSection = document.getElementById('registerSection');
+const forumSection = document.getElementById('forumSection');
+
+const loginUsername = document.getElementById('loginUsername');
+const loginPassword = document.getElementById('loginPassword');
+const loginBtn = document.getElementById('loginBtn');
+
+const registerUsername = document.getElementById('registerUsername');
+const registerPassword = document.getElementById('registerPassword');
+const registerBtn = document.getElementById('registerBtn');
+
+const showRegisterBtn = document.getElementById('showRegisterBtn');
+const showLoginBtn = document.getElementById('showLoginBtn');
+
+const logoutBtn = document.getElementById('logoutBtn');
+
+const titleInput = document.getElementById('titleInput');
+const messageInput = document.getElementById('messageInput');
+const postBtn = document.getElementById('postBtn');
+
+const messagesContainer = document.getElementById('messagesContainer');
+
+const discussionView = document.getElementById('discussionView');
+const discussionTitle = document.getElementById('discussionTitle');
+const discussionMessage = document.getElementById('discussionMessage');
+const commentsContainer = document.getElementById('commentsContainer');
+
+const commentInput = document.getElementById('commentInput');
+const addCommentBtn = document.getElementById('addCommentBtn');
+
+const backToListBtn = document.getElementById('backToListBtn');
+
+// Função para escapar HTML (para evitar XSS)
+function escapeHtml(text) {
+  if (typeof text !== 'string') {
+    text = '';
   }
-  return false;
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
-function getLoggedUser() {
-  return localStorage.getItem('loggedUser');
+
+// Alternar telas login/register
+showRegisterBtn.onclick = () => {
+  loginSection.style.display = 'none';
+  registerSection.style.display = 'block';
+};
+showLoginBtn.onclick = () => {
+  registerSection.style.display = 'none';
+  loginSection.style.display = 'block';
+};
+
+// Registrar novo usuário
+registerBtn.onclick = () => {
+  const username = registerUsername.value.trim();
+  const password = registerPassword.value.trim();
+
+  if (!username || !password) {
+    alert('Por favor, preencha nome de usuário e senha.');
+    return;
+  }
+
+  if (users[username]) {
+    alert('Usuário já existe!');
+    return;
+  }
+
+  users[username] = { username, password };
+  saveData('users', users);
+
+  alert('Usuário registrado com sucesso! Agora faça login.');
+
+  registerUsername.value = '';
+  registerPassword.value = '';
+
+  registerSection.style.display = 'none';
+  loginSection.style.display = 'block';
+};
+
+// Login
+loginBtn.onclick = () => {
+  const username = loginUsername.value.trim();
+  const password = loginPassword.value.trim();
+
+  if (!username || !password) {
+    alert('Por favor, preencha nome de usuário e senha.');
+    return;
+  }
+
+  const user = users[username];
+  if (!user || user.password !== password) {
+    alert('Usuário ou senha incorretos.');
+    return;
+  }
+
+  currentUser = user;
+  loginUsername.value = '';
+  loginPassword.value = '';
+
+  showForum();
+};
+
+// Mostrar a área do fórum
+function showForum() {
+  loginSection.style.display = 'none';
+  registerSection.style.display = 'none';
+  forumSection.style.display = 'block';
+  discussionView.style.display = 'none';
+
+  renderDiscussions();
 }
 
-function logout() {
-  localStorage.removeItem('loggedUser');
-  location.reload();
-}
+// Logout
+logoutBtn.onclick = () => {
+  currentUser = null;
+  forumSection.style.display = 'none';
+  loginSection.style.display = 'block';
+};
 
-function postDiscussion(title, message) {
-  let user = getLoggedUser();
-  if (!user) return false;
+// Criar nova discussão
+postBtn.onclick = () => {
+  const title = titleInput.value.trim();
+  const message = messageInput.value.trim();
 
-  let posts = JSON.parse(localStorage.getItem('posts')) || [];
-  posts.unshift({
+  if (!title || !message) {
+    alert('Por favor, preencha título e mensagem.');
+    return;
+  }
+
+  const newDiscussion = {
     id: Date.now(),
-    user,
+    author: currentUser.username,
     title,
     message,
-    date: new Date().toLocaleString(),
     comments: []
-  });
-  localStorage.setItem('posts', JSON.stringify(posts));
-  return true;
-}
+  };
 
-function postComment(postId, commentText) {
-  let user = getLoggedUser();
-  if (!user) return false;
+  discussions.push(newDiscussion);
+  saveData('discussions', discussions);
 
-  let posts = JSON.parse(localStorage.getItem('posts')) || [];
-  let post = posts.find(p => p.id === postId);
-  if (!post) return false;
+  titleInput.value = '';
+  messageInput.value = '';
 
-  post.comments.push({
-    user,
-    text: commentText,
-    date: new Date().toLocaleString()
-  });
-  localStorage.setItem('posts', JSON.stringify(posts));
-  return true;
-}
+  renderDiscussions();
+};
 
-function loadMessages() {
-  let posts = JSON.parse(localStorage.getItem('posts')) || [];
-  let container = document.getElementById('messagesContainer');
-  container.innerHTML = '';
+// Renderizar lista de discussões
+function renderDiscussions() {
+  messagesContainer.innerHTML = '';
 
-  posts.forEach(post => {
-    if (!Array.isArray(post.comments)) {
-      post.comments = [];
-    }
-
-    let postDiv = document.createElement('div');
-    postDiv.className = 'forum-item';
-    postDiv.style.border = '1px solid #ccc';
-    postDiv.style.padding = '10px';
-    postDiv.style.marginBottom = '15px';
-
-    postDiv.innerHTML = `
-      <h3>${post.title}</h3>
-      <p><strong>${post.user}</strong> - ${post.date}</p>
-      <p>${post.message}</p>
-
-      <div class="comments-section" style="margin-top:10px;">
-        <h4>Comentários (${post.comments.length})</h4>
-        <div class="comments-list" id="comments-for-${post.id}">
-          ${post.comments.map(c => `<p><strong>${c.user}:</strong> ${c.text} <em style="font-size:0.8em;color:#777;">(${c.date})</em></p>`).join('')}
-        </div>
-
-        <textarea id="commentInput-${post.id}" placeholder="Escreva um comentário..." style="width:100%; height:50px; margin-top:5px;"></textarea>
-        <button data-postid="${post.id}" class="commentBtn" style="margin-top:5px;">Comentar</button>
-      </div>
-    `;
-
-    container.appendChild(postDiv);
-  });
-
-  // Botões comentar
-  document.querySelectorAll('.commentBtn').forEach(btn => {
-    btn.onclick = () => {
-      let postId = Number(btn.getAttribute('data-postid'));
-      let textarea = document.getElementById(`commentInput-${postId}`);
-      let commentText = textarea.value.trim();
-      if (!commentText) {
-        alert('Escreva um comentário antes de enviar.');
-        return;
-      }
-
-      if (postComment(postId, commentText)) {
-        textarea.value = '';
-        loadMessages();
-      }
-    };
-  });
-}
-
-
-  // Eventos dos botões comentar
-  document.querySelectorAll('.commentBtn').forEach(btn => {
-    btn.onclick = () => {
-      let postId = Number(btn.getAttribute('data-postid'));
-      let textarea = document.getElementById(`commentInput-${postId}`);
-      let commentText = textarea.value.trim();
-      if (!commentText) {
-        alert('Escreva um comentário antes de enviar.');
-        return;
-      }
-
-      if (postComment(postId, commentText)) {
-        textarea.value = '';
-        loadMessages();
-      }
-    };
-  });
-}
-
-window.onload = function() {
-  const registerBtn = document.getElementById('registerBtn');
-  const loginBtn = document.getElementById('loginBtn');
-  const postBtn = document.getElementById('postBtn');
-  const logoutBtn = document.getElementById('logoutBtn');
-
-  const registerMsg = document.getElementById('registerMessage');
-  const loginMsg = document.getElementById('loginMessage');
-
-  const registerSection = document.getElementById('registerSection');
-  const loginSection = document.getElementById('loginSection');
-  const forumSection = document.getElementById('forumSection');
-
-  const userGreeting = document.getElementById('userGreeting');
-
-  let loggedUser = getLoggedUser();
-
-  if (loggedUser) {
-    registerSection.style.display = 'none';
-    loginSection.style.display = 'none';
-    forumSection.style.display = 'block';
-    userGreeting.textContent = loggedUser;
-    loadMessages();
+  if (discussions.length === 0) {
+    messagesContainer.innerHTML = '<p>Nenhuma discussão criada ainda.</p>';
+    return;
   }
 
-  registerBtn.onclick = () => {
-    let username = document.getElementById('regUsername').value.trim();
-    let password = document.getElementById('regPassword').value;
+  discussions.forEach(discussion => {
+    const div = document.createElement('div');
+    div.className = 'forum-item';
+    div.innerHTML = `
+      <h3>${escapeHtml(discussion.title)}</h3>
+      <p>Por: <strong>${escapeHtml(discussion.author)}</strong></p>
+      <button data-id="${discussion.id}">Ver Discussão</button>
+    `;
 
-    if (!username || !password) {
-      registerMsg.style.color = 'red';
-      registerMsg.textContent = 'Por favor, preencha todos os campos.';
-      return;
-    }
-    if (registerUser(username, password)) {
-      registerMsg.style.color = 'green';
-      registerMsg.textContent = 'Registro feito com sucesso! Faça login.';
-    } else {
-      registerMsg.style.color = 'red';
-      registerMsg.textContent = 'Usuário já existe.';
-    }
-  };
+    const btn = div.querySelector('button');
+    btn.onclick = () => showDiscussion(discussion.id);
 
-  loginBtn.onclick = () => {
-    let username = document.getElementById('loginUsername').value.trim();
-    let password = document.getElementById('loginPassword').value;
+    messagesContainer.appendChild(div);
+  });
+}
 
-    if (!username || !password) {
-      loginMsg.style.color = 'red';
-      loginMsg.textContent = 'Por favor, preencha todos os campos.';
-      return;
-    }
-    if (authenticateUser(username, password)) {
-      registerSection.style.display = 'none';
-      loginSection.style.display = 'none';
-      forumSection.style.display = 'block';
-      loginMsg.textContent = '';
-      userGreeting.textContent = username;
-      loadMessages();
-    } else {
-      loginMsg.style.color = 'red';
-      loginMsg.textContent = 'Usuário ou senha incorretos.';
-    }
-  };
+// Mostrar visualização detalhada de uma discussão
+function showDiscussion(id) {
+  const discussion = discussions.find(d => d.id === id);
+  if (!discussion) return;
 
-  postBtn.onclick = () => {
-    let title = document.getElementById('titleInput').value.trim();
-    let message = document.getElementById('messageInput').value.trim();
+  discussionTitle.textContent = discussion.title;
+  discussionMessage.textContent = discussion.message;
 
-    if (!title || !message) {
-      alert('Preencha título e mensagem antes de postar.');
-      return;
-    }
+  renderComments(discussion.comments);
 
-    if (postDiscussion(title, message)) {
-      document.getElementById('titleInput').value = '';
-      document.getElementById('messageInput').value = '';
-      loadMessages();
-    }
-  };
+  loginSection.style.display = 'none';
+  registerSection.style.display = 'none';
+  forumSection.style.display = 'block';
+  discussionView.style.display = 'block';
 
-  logoutBtn.onclick = () => {
-    logout();
-  };
+  // Salvar o id da discussão atual para adicionar comentários
+  discussionView.dataset.currentDiscussionId = id;
+}
+
+// Renderizar comentários
+function renderComments(comments) {
+  commentsContainer.innerHTML = '';
+
+  if (!comments || comments.length === 0) {
+    commentsContainer.innerHTML = '<p>Sem comentários ainda.</p>';
+    return;
+  }
+
+  comments.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'forum-item';
+    div.innerHTML = `
+      <p><strong>${escapeHtml(c.author)}</strong>: ${escapeHtml(c.message)}</p>
+    `;
+    commentsContainer.appendChild(div);
+  });
+}
+
+// Adicionar comentário
+addCommentBtn.onclick = () => {
+  const commentText = commentInput.value.trim();
+  if (!commentText) {
+    alert('Por favor, escreva um comentário.');
+    return;
+  }
+
+  const discussionId = Number(discussionView.dataset.currentDiscussionId);
+  const discussion = discussions.find(d => d.id === discussionId);
+  if (!discussion) return;
+
+  discussion.comments.push({
+    author: currentUser.username,
+    message: commentText
+  });
+
+  saveData('discussions', discussions);
+
+  commentInput.value = '';
+  renderComments(discussion.comments);
+};
+
+// Voltar para a lista de discussões
+backToListBtn.onclick = () => {
+  discussionView.style.display = 'none';
+  renderDiscussions();
+};
+
+// Se já estiver logado, mostrar fórum
+window.onload = () => {
+  if (currentUser) {
+    showForum();
+  } else {
+    loginSection.style.display = 'block';
+  }
 };

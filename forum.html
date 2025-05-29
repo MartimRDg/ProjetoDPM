@@ -22,46 +22,56 @@
         </nav>
     </header>
 <main>
-    <section id="registerSection">
-        <h2>Registrar</h2>
-        <input type="text" id="regUsername" placeholder="Nome de usuário" />
-        <input type="password" id="regPassword" placeholder="Senha" />
-        <button id="registerBtn">Registrar</button>
-        <p id="registerMessage" style="color:red;"></p>
-    </section>
-
-    <section id="loginSection" style="margin-top: 30px;">
+    <!-- Login Section -->
+    <section id="loginSection">
         <h2>Login</h2>
-        <input type="text" id="loginUsername" placeholder="Nome de usuário" />
-        <input type="password" id="loginPassword" placeholder="Senha" />
+        <input type="text" id="loginUsername" placeholder="Digite seu nome de usuário" />
+        <input type="password" id="loginPassword" placeholder="Digite sua senha" />
         <button id="loginBtn">Entrar</button>
-        <p id="loginMessage" style="color:red;"></p>
+        <p>Não tem conta? <button id="showRegisterBtn">Registrar-se</button></p>
     </section>
-
-    <section id="forumSection" style="display:none; margin-top: 30px;">
-        <div>
-            <button id="logoutBtn" style="float:right; margin-bottom: 10px;">Logout</button>
-            <h3>Olá, <span id="userGreeting"></span>!</h3>
-        </div>
-
+    
+    <!-- Register Section -->
+    <section id="registerSection" style="display:none;">
+        <h2>Registrar Nova Conta</h2>
+        <input type="text" id="registerUsername" placeholder="Escolha um nome de usuário" />
+        <input type="password" id="registerPassword" placeholder="Escolha uma senha" />
+        <button id="registerBtn">Registrar</button>
+        <p>Já tem conta? <button id="showLoginBtn">Entrar</button></p>
+    </section>
+    
+    <!-- Forum Section -->
+    <section id="forumSection" style="display:none;">
+        <button id="logoutBtn">Sair</button>
         <div class="create-forum">
             <h2>Criar Discussão</h2>
             <input type="text" id="titleInput" placeholder="Título" />
             <textarea id="messageInput" placeholder="Mensagem"></textarea>
             <button id="postBtn">Postar</button>
         </div>
-
+    
         <div class="forum-list">
             <h2>Discussões</h2>
             <div id="messagesContainer"></div>
         </div>
+    
+        <div id="discussionView" style="display:none;">
+            <button id="backToListBtn">Voltar para lista</button>
+            <h3 id="discussionTitle"></h3>
+            <p id="discussionMessage"></p>
+    
+            <h4>Comentários</h4>
+            <div id="commentsContainer"></div>
+    
+            <textarea id="commentInput" placeholder="Escreva seu comentário aqui"></textarea>
+            <button id="addCommentBtn">Comentar</button>
+        </div>
     </section>
-</main>
+    </main>
     <footer>
         <p>&copy; 2025 Markiplier Fanbase. All rights reserved.</p>
         <p>Criado por: Martim Diogo</p>
     </footer>
-
     <script src="forum.js"></script>
 </body>
 </html>
